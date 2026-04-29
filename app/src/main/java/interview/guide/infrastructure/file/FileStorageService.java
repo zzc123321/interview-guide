@@ -91,6 +91,9 @@ public class FileStorageService {
         String fileKey = generateFileKey(originalFilename, prefix);
 
         try {
+            // Self-heal local/dev environments where the bucket was not pre-created.
+            ensureBucketExists();
+
             PutObjectRequest putRequest = PutObjectRequest.builder()
                     .bucket(storageConfig.getBucket())
                     .key(fileKey)

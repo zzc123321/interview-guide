@@ -7,6 +7,7 @@ import interview.guide.modules.voiceinterview.dto.WebSocketControlMessage;
 import interview.guide.modules.voiceinterview.dto.WebSocketSubtitleMessage;
 import interview.guide.modules.voiceinterview.model.VoiceInterviewMessageEntity;
 import interview.guide.modules.voiceinterview.model.VoiceInterviewSessionEntity;
+import interview.guide.modules.auth.service.AuthService;
 import interview.guide.modules.voiceinterview.config.VoiceInterviewProperties;
 import interview.guide.modules.voiceinterview.service.QwenAsrService;
 import interview.guide.modules.voiceinterview.service.QwenTtsService;
@@ -138,6 +139,11 @@ public class VoiceInterviewWebSocketHandler extends TextWebSocketHandler impleme
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        if (session.getAttributes().get(AuthService.SESSION_USER_KEY) == null) {
+            session.close(CloseStatus.POLICY_VIOLATION.withReason("未登录"));
+            return;
+        }
+
         String sessionId = extractSessionId(session);
 
         // Increase message size limits for audio streaming

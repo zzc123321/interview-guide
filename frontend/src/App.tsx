@@ -7,6 +7,8 @@ import type { Difficulty } from './components/UnifiedInterviewModal';
 import type { CategoryDTO } from './api/skill';
 import { Loader2 } from 'lucide-react';
 import { ROUTES } from './constants/routes';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import PublicOnlyRoute from './components/auth/PublicOnlyRoute';
 
 // Lazy load components
 const UploadPage = lazy(() => import('./pages/UploadPage'));
@@ -22,6 +24,7 @@ const VoiceInterviewEvaluationPage = lazy(() => import('./pages/VoiceInterviewEv
 const InterviewSchedulePage = lazy(() => import('./pages/InterviewSchedulePage'));
 const InterviewHubPage = lazy(() => import('./pages/InterviewHubPage'));
 const InterviewDetailPanel = lazy(() => import('./components/InterviewDetailPanel'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
 
 // Loading component
 const Loading = () => (
@@ -167,53 +170,60 @@ function App() {
     <BrowserRouter>
       <Suspense fallback={<Loading />}>
         <Routes>
-          <Route path="/" element={<Layout />}>
-            {/* 默认重定向到简历管理页面 */}
-            <Route index element={<Navigate to="/history" replace />} />
-
-            {/* 上传页面 */}
-            <Route path="upload" element={<UploadPageWrapper />} />
-
-            {/* 历史记录列表（简历库） */}
-            <Route path="history" element={<HistoryListWrapper />} />
-
-            {/* 简历详情 */}
-            <Route path="history/:resumeId" element={<ResumeDetailWrapper />} />
-
-            {/* 面试中心 */}
-            <Route path="interview-hub" element={<InterviewHubPage />} />
-
-            {/* 面试记录列表 */}
-            <Route path="interviews" element={<InterviewHistoryWrapper />} />
-
-            {/* 面试详情报告 */}
-            <Route path="interviews/:sessionId" element={<InterviewDetailPageWrapper />} />
-
-            {/* 模拟面试（通用入口） */}
-            <Route path="interview" element={<InterviewWrapper />} />
-
-            {/* 模拟面试 */}
-            <Route path="interview/:resumeId" element={<InterviewWrapper />} />
-
-            {/* 语音面试 */}
-            <Route path="voice-interview" element={<VoiceInterviewPageWrapper />} />
-
-            {/* 语音面试评估报告 */}
-            <Route path="voice-interview/:sessionId/evaluation" element={<VoiceInterviewEvaluationPage />} />
-
-            {/* 知识库管理 */}
-            <Route path="knowledgebase" element={<KnowledgeBaseManagePageWrapper />} />
-
-            {/* 知识库上传 */}
-            <Route path="knowledgebase/upload" element={<KnowledgeBaseUploadPageWrapper />} />
-
-            {/* 面试日程管理 */}
-            <Route path="interview-schedule" element={<InterviewSchedulePage />} />
-
-            {/* 问答助手（知识库聊天） */}
-            <Route path="knowledgebase/chat" element={<KnowledgeBaseQueryPageWrapper />} />
+          <Route element={<PublicOnlyRoute />}>
+            <Route path="/login" element={<LoginPage />} />
           </Route>
 
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Layout />}>
+              {/* 默认重定向到简历管理页面 */}
+              <Route index element={<Navigate to="/history" replace />} />
+
+              {/* 上传页面 */}
+              <Route path="upload" element={<UploadPageWrapper />} />
+
+              {/* 历史记录列表（简历库） */}
+              <Route path="history" element={<HistoryListWrapper />} />
+
+              {/* 简历详情 */}
+              <Route path="history/:resumeId" element={<ResumeDetailWrapper />} />
+
+              {/* 面试中心 */}
+              <Route path="interview-hub" element={<InterviewHubPage />} />
+
+              {/* 面试记录列表 */}
+              <Route path="interviews" element={<InterviewHistoryWrapper />} />
+
+              {/* 面试详情报告 */}
+              <Route path="interviews/:sessionId" element={<InterviewDetailPageWrapper />} />
+
+              {/* 模拟面试（通用入口） */}
+              <Route path="interview" element={<InterviewWrapper />} />
+
+              {/* 模拟面试 */}
+              <Route path="interview/:resumeId" element={<InterviewWrapper />} />
+
+              {/* 语音面试 */}
+              <Route path="voice-interview" element={<VoiceInterviewPageWrapper />} />
+
+              {/* 语音面试评估报告 */}
+              <Route path="voice-interview/:sessionId/evaluation" element={<VoiceInterviewEvaluationPage />} />
+
+              {/* 知识库管理 */}
+              <Route path="knowledgebase" element={<KnowledgeBaseManagePageWrapper />} />
+
+              {/* 知识库上传 */}
+              <Route path="knowledgebase/upload" element={<KnowledgeBaseUploadPageWrapper />} />
+
+              {/* 面试日程管理 */}
+              <Route path="interview-schedule" element={<InterviewSchedulePage />} />
+
+              {/* 问答助手（知识库聊天） */}
+              <Route path="knowledgebase/chat" element={<KnowledgeBaseQueryPageWrapper />} />
+            </Route>
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

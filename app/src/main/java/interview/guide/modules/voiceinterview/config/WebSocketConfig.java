@@ -1,6 +1,7 @@
 package interview.guide.modules.voiceinterview.config;
 
 import interview.guide.common.config.CorsProperties;
+import interview.guide.modules.auth.config.AuthHandshakeInterceptor;
 import interview.guide.modules.voiceinterview.handler.VoiceInterviewWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -16,10 +17,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     private final VoiceInterviewWebSocketHandler voiceInterviewWebSocketHandler;
     private final CorsProperties corsProperties;
+    private final AuthHandshakeInterceptor authHandshakeInterceptor;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(voiceInterviewWebSocketHandler, "/ws/voice-interview/{sessionId}")
+                .addInterceptors(authHandshakeInterceptor)
                 .addInterceptors(new HttpSessionHandshakeInterceptor())
                 .setAllowedOrigins(corsProperties.getAllowedOrigins().split(","));
     }

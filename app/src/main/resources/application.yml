@@ -101,6 +101,11 @@ spring:
 
 # Application custom configuration
 app:
+  auth:
+    bootstrap:
+      email: ${APP_AUTH_BOOTSTRAP_EMAIL:}
+      password: ${APP_AUTH_BOOTSTRAP_PASSWORD:}
+      name: ${APP_AUTH_BOOTSTRAP_NAME:Administrator}
   ai:
     default-provider: dashscope
     agent-utils:

@@ -236,7 +236,7 @@ interview-guide/
 | ------------- | ---- | ---- | ---------------------------------------- |
 | JDK           | 21+  | 是   | 开发语言                                 |
 | Node.js       | 18+  | 是   | 前端构建                                 |
-| Docker        | -    | 推荐 | 一键启动依赖服务（PostgreSQL/Redis/RustFS）|
+| Docker        | -    | 推荐 | 一键启动依赖服务（PostgreSQL/Redis/MinIO）|
 
 > 如果不用 Docker，需要自行安装 PostgreSQL 14+（含 pgvector 扩展）、Redis 6+ 和 S3 兼容存储。
 
@@ -263,7 +263,7 @@ source ~/.bashrc
 
 ### 3. 启动依赖服务（可选）
 
-项目提供了 `docker-compose.dev.yml`，可一键启动 PostgreSQL、Redis、RustFS（S3 兼容存储）三个依赖：
+项目提供了 `docker-compose.dev.yml`，可一键启动 PostgreSQL、Redis、MinIO（S3 兼容存储）三个依赖：
 
 ```bash
 # 启动依赖服务
@@ -280,11 +280,11 @@ docker compose -f docker-compose.dev.yml down -v
 
 | 服务         | 地址             | 账号            | 密码            |
 | ------------ | ---------------- | --------------- | --------------- |
-| PostgreSQL   | `localhost:5432` | `postgres`      | `123456`        |
+| PostgreSQL   | `localhost:5432` | `postgres`      | `password`      |
 | Redis        | `localhost:6379` | -               | -               |
-| RustFS 控制台 | `localhost:9001` | `rustfsadmin`   | `rustfsadmin`   |
+| MinIO 控制台 | `localhost:9001` | `minioadmin`    | `minioadmin`    |
 
-> **注意**：首次启动后需浏览器访问 [http://localhost:9001](http://localhost:9001) 登录 RustFS 控制台，手动创建名为 `interview-guide` 的 Bucket。如果本地已有 MinIO 或其他 S3 兼容存储，也可以直接使用，在 `application.yml` 中修改对应的连接配置即可。
+> **注意**：当前默认使用 MinIO 作为本地 S3 兼容存储。应用启动时会自动确保名为 `interview-guide` 的 Bucket 存在，通常无需手动创建；如果你使用的是其他 S3 兼容存储，只需要在 `application.yml` 或 `.env` 中改成对应的连接配置即可。
 
 ### 4. 启动应用
 

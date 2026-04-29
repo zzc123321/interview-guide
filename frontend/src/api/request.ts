@@ -14,6 +14,7 @@ const baseURL = import.meta.env.PROD ? '' : 'http://localhost:8080';
 const instance: AxiosInstance = axios.create({
   baseURL,
   timeout: 60000,
+  withCredentials: true,
 });
 
 /**
