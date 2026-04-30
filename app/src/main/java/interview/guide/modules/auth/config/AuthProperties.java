@@ -17,6 +17,7 @@ public class AuthProperties {
         private String email = "";
         private String password = "";
         private String name = "Administrator";
+        private boolean failOnMissingInProd = true;
 
         public String getEmail() {
             return email;
@@ -40,6 +41,14 @@ public class AuthProperties {
 
         public void setName(String name) {
             this.name = name;
+        }
+
+        public boolean isFailOnMissingInProd() {
+            return failOnMissingInProd;
+        }
+
+        public void setFailOnMissingInProd(boolean failOnMissingInProd) {
+            this.failOnMissingInProd = failOnMissingInProd;
         }
     }
 }

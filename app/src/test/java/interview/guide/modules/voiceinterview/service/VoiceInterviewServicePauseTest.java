@@ -1,10 +1,12 @@
 package interview.guide.modules.voiceinterview.service;
 
 import interview.guide.common.exception.BusinessException;
-import interview.guide.modules.voiceinterview.dto.SessionMetaDTO;
 import interview.guide.modules.voiceinterview.dto.SessionResponseDTO;
+import interview.guide.modules.voiceinterview.listener.VoiceEvaluateStreamProducer;
 import interview.guide.modules.voiceinterview.model.VoiceInterviewSessionEntity;
 import interview.guide.modules.voiceinterview.model.VoiceInterviewSessionStatus;
+import interview.guide.modules.voiceinterview.repository.VoiceInterviewEvaluationRepository;
+import interview.guide.modules.voiceinterview.config.VoiceInterviewProperties;
 import interview.guide.modules.voiceinterview.repository.VoiceInterviewMessageRepository;
 import interview.guide.modules.voiceinterview.repository.VoiceInterviewSessionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,11 +16,7 @@ import org.mockito.MockitoAnnotations;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,21 +32,30 @@ class VoiceInterviewServicePauseTest {
     private VoiceInterviewMessageRepository messageRepository;
 
     @Mock
+    private VoiceInterviewEvaluationRepository evaluationRepository;
+
+    @Mock
     private RedissonClient redissonClient;
 
     @Mock
     private RBucket<Object> bucket;
+
+    @Mock
+    private VoiceEvaluateStreamProducer voiceEvaluateStreamProducer;
 
     private VoiceInterviewService service;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        VoiceInterviewProperties properties = new VoiceInterviewProperties();
         service = new VoiceInterviewService(
             sessionRepository,
             messageRepository,
+            evaluationRepository,
             redissonClient,
-            null  // properties
+            properties,
+            voiceEvaluateStreamProducer
         );
     }
 
@@ -93,7 +100,7 @@ class VoiceInterviewServicePauseTest {
     }
 
     @Test
-    void resumeSession_shouldReturnWebSocketUrl() {
+    void resumeSession_shouldReturnResumedSession() {
         // Given
         Long sessionId = 1L;
         VoiceInterviewSessionEntity session = VoiceInterviewSessionEntity.builder()
@@ -114,7 +121,7 @@ class VoiceInterviewServicePauseTest {
         // Then
         assertNotNull(result);
         assertEquals(sessionId, result.getSessionId());
-        assertTrue(result.getWebSocketUrl().contains(sessionId.toString()));
+        assertNull(result.getWebSocketUrl());
         assertEquals(VoiceInterviewSessionStatus.IN_PROGRESS.name(), result.getStatus());
     }
 

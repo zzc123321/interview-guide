@@ -24,6 +24,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
         registry.addHandler(voiceInterviewWebSocketHandler, "/ws/voice-interview/{sessionId}")
                 .addInterceptors(authHandshakeInterceptor)
                 .addInterceptors(new HttpSessionHandshakeInterceptor())
-                .setAllowedOrigins(corsProperties.getAllowedOrigins().split(","));
+                .setAllowedOrigins(corsProperties.getAllowedOriginList().toArray(String[]::new));
     }
 }

@@ -14,6 +14,7 @@ import interview.guide.modules.voiceinterview.dto.VoiceInterviewMessageDTO;
 import interview.guide.modules.voiceinterview.model.VoiceInterviewSessionEntity;
 import interview.guide.modules.voiceinterview.service.VoiceInterviewEvaluationService;
 import interview.guide.modules.voiceinterview.service.VoiceInterviewService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 import java.util.Map;
@@ -54,23 +56,26 @@ public class VoiceInterviewController {
      * Create a new voice interview session
      */
     @PostMapping("/sessions")
-    public Result<SessionResponseDTO> createSession(@Valid @RequestBody CreateSessionRequest request) {
+    public Result<SessionResponseDTO> createSession(
+        @Valid @RequestBody CreateSessionRequest request,
+        HttpServletRequest httpRequest
+    ) {
         log.info("Creating voice interview session for role: {}", request.getRoleType());
         SessionResponseDTO session = voiceInterviewService.createSession(request);
-        return Result.success(session);
+        return Result.success(withWebSocketUrl(session, httpRequest));
     }
 
     /**
      * Get session details by ID
      */
     @GetMapping("/sessions/{sessionId}")
-    public Result<SessionResponseDTO> getSession(@PathVariable Long sessionId) {
+    public Result<SessionResponseDTO> getSession(@PathVariable Long sessionId, HttpServletRequest httpRequest) {
         log.info("Getting session details for: {}", sessionId);
         SessionResponseDTO session = voiceInterviewService.getSessionDTO(sessionId);
         if (session == null) {
             return Result.error("Session not found: " + sessionId);
         }
-        return Result.success(session);
+        return Result.success(withWebSocketUrl(session, httpRequest));
     }
 
     /**
@@ -104,10 +109,10 @@ public class VoiceInterviewController {
      * Resume interview session
      */
     @PutMapping("/sessions/{sessionId}/resume")
-    public Result<SessionResponseDTO> resumeSession(@PathVariable Long sessionId) {
+    public Result<SessionResponseDTO> resumeSession(@PathVariable Long sessionId, HttpServletRequest httpRequest) {
         log.info("Resuming session: {}", sessionId);
         SessionResponseDTO session = voiceInterviewService.resumeSession(sessionId.toString());
-        return Result.success(session);
+        return Result.success(withWebSocketUrl(session, httpRequest));
     }
 
     /**
@@ -214,5 +219,18 @@ public class VoiceInterviewController {
         return Result.success(VoiceEvaluationStatusDTO.builder()
                 .evaluateStatus(AsyncTaskStatus.PENDING.name())
                 .build());
+    }
+
+    private SessionResponseDTO withWebSocketUrl(SessionResponseDTO session, HttpServletRequest request) {
+        String protocol = request.isSecure() ? "wss" : "ws";
+        String webSocketUrl = ServletUriComponentsBuilder.fromRequestUri(request)
+            .replacePath("/ws/voice-interview/{sessionId}")
+            .replaceQuery(null)
+            .scheme(protocol)
+            .buildAndExpand(session.getSessionId())
+            .toUriString();
+
+        session.setWebSocketUrl(webSocketUrl);
+        return session;
     }
 }

@@ -357,7 +357,7 @@ docker-compose up -d --build
 | ---------------- | ---------------------------------------------- | ------------ | ------------ | ---------------------- |
 | **前端应用**     | [http://localhost](http://localhost)           | -            | -            | 用户访问入口           |
 | **后端 API**     | [http://localhost:8080](http://localhost:8080) | -            | -            | RESTful API            |
-| **接口文档**     | [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) | - | - | SpringDoc/Swagger UI |
+| **接口文档**     | [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) | - | - | SpringDoc/Swagger UI（开发环境） |
 | **MinIO 控制台** | [http://localhost:9001](http://localhost:9001) | `minioadmin` | `minioadmin` | 对象存储管理           |
 | **MinIO API**    | `localhost:9000`                               | -            | -            | S3 兼容接口            |
 | **PostgreSQL**   | `localhost:5432`                               | `postgres`   | `password`   | 数据库 (包含 pgvector) |
@@ -384,6 +384,28 @@ docker-compose down -v
 # 清理无用镜像（构建产生的中间层）
 docker image prune -f
 ```
+
+## 生产部署建议
+
+如果你准备把项目作为公网应用发布，建议至少按下面方式部署：
+
+- 使用 `SPRING_PROFILES_ACTIVE=prod` 启动后端
+- 所有密钥、数据库密码、对象存储凭证都通过环境变量注入，不要保留默认值
+- 前端通过 Nginx 与后端同域部署，统一代理 `/api/` 和 `/ws/`
+- 生产环境默认关闭 Swagger/OpenAPI
+- 将 `CORS_ALLOWED_ORIGINS` 显式设置为你的正式前端域名
+- 首次部署时显式设置 `APP_AUTH_BOOTSTRAP_EMAIL` / `APP_AUTH_BOOTSTRAP_PASSWORD`
+
+推荐最小发布检查：
+
+1. 能登录并调用 `/api/auth/me`
+2. 能上传简历并完成分析
+3. 能创建文字面试和语音面试会话
+4. 语音面试的 WebSocket 连接走正式域名而不是 `localhost`
+5. `prod` 环境下无法访问 `swagger-ui.html`
+
+更完整的发布前检查可参考：
+[docs/release-checklists/public-release-smoke-test.md](/Users/zhangzhichao/Documents/codexworkspace/interviewguide/interview-guide/docs/release-checklists/public-release-smoke-test.md:1)
 
 ## 使用场景
 

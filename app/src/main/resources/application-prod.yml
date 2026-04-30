@@ -1,0 +1,24 @@
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  ai:
+    vectorstore:
+      pgvector:
+        initialize-schema: false
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}

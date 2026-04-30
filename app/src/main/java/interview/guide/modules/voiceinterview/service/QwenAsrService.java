@@ -48,6 +48,8 @@ import java.util.function.Consumer;
 @Service
 public class QwenAsrService {
 
+    private final boolean realtimeClientsEnabled;
+
     // Runtime configuration values (loaded from VoiceInterviewProperties; setters kept for tests)
     private String url;
 
@@ -71,6 +73,7 @@ public class QwenAsrService {
 
     public QwenAsrService(VoiceInterviewProperties voiceInterviewProperties) {
         VoiceInterviewProperties.AsrConfig asr = voiceInterviewProperties.getQwen().getAsr();
+        this.realtimeClientsEnabled = voiceInterviewProperties.isRealtimeClientsEnabled();
         this.url = asr.getUrl();
         this.model = asr.getModel();
         this.apiKey = asr.getApiKey();
@@ -106,6 +109,10 @@ public class QwenAsrService {
      */
     @PostConstruct
     public void init() {
+        if (!realtimeClientsEnabled) {
+            log.info("QwenAsrService realtime client disabled by configuration");
+            return;
+        }
         if (apiKey == null || apiKey.trim().isEmpty()) {
             throw new IllegalStateException("API key must be configured before initializing QwenAsrService");
         }
@@ -192,6 +199,12 @@ public class QwenAsrService {
             Consumer<Throwable> onError) {
         if (sessions.containsKey(sessionId)) {
             throw new IllegalStateException("Session already exists: " + sessionId);
+        }
+
+        if (!realtimeClientsEnabled) {
+            sessions.put(sessionId, new AsrSession(null, onFinal, onPartial, onError));
+            log.debug("[Session: {}] Skipping ASR connection because realtime client is disabled", sessionId);
+            return;
         }
 
         try {
@@ -305,6 +318,11 @@ public class QwenAsrService {
             throw new IllegalStateException("No active session found: " + sessionId);
         }
 
+        if (!realtimeClientsEnabled) {
+            log.trace("[Session: {}] Ignoring audio because realtime client is disabled", sessionId);
+            return;
+        }
+
         try {
             // Convert audio data to Base64
             String audioBase64 = Base64.getEncoder().encodeToString(audioData);
@@ -340,8 +358,10 @@ public class QwenAsrService {
             }
 
             try {
-                session.getConversation().endSession();
-                log.info("[Session: {}] Transcription session stopped", sessionId);
+                if (session.getConversation() != null) {
+                    session.getConversation().endSession();
+                    log.info("[Session: {}] Transcription session stopped", sessionId);
+                }
             } catch (InterruptedException e) {
                 log.error("[Session: {}] Thread interrupted while ending session", sessionId, e);
                 Thread.currentThread().interrupt();
@@ -350,7 +370,9 @@ public class QwenAsrService {
             }
 
             try {
-                session.getConversation().close();
+                if (session.getConversation() != null) {
+                    session.getConversation().close();
+                }
             } catch (Exception e) {
                 log.debug("[Session: {}] Connection already closed: {}", sessionId, e.getMessage());
             }

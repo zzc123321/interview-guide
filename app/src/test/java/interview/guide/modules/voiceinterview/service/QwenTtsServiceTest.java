@@ -1,5 +1,6 @@
 package interview.guide.modules.voiceinterview.service;
 
+import interview.guide.modules.voiceinterview.config.VoiceInterviewProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -14,16 +15,17 @@ class QwenTtsServiceTest {
 
     @BeforeEach
     void setUp() {
-        ttsService = new QwenTtsService();
+        VoiceInterviewProperties properties = new VoiceInterviewProperties();
+        properties.setRealtimeClientsEnabled(false);
+        properties.getQwen().getTts().setApiKey("test-api-key");
+        ttsService = new QwenTtsService(properties);
 
-        // Set field values using reflection
-        ReflectionTestUtils.setField(ttsService, "url", "wss://dashscope.aliyuncs.com/api-ws/v1/realtime");
         ReflectionTestUtils.setField(ttsService, "model", "qwen3-tts-flash-realtime");
         ReflectionTestUtils.setField(ttsService, "apiKey", "test-api-key");
         ReflectionTestUtils.setField(ttsService, "voice", "Cherry");
         ReflectionTestUtils.setField(ttsService, "format", "pcm");
         ReflectionTestUtils.setField(ttsService, "sampleRate", 16000);
-        ReflectionTestUtils.setField(ttsService, "mode", "server_commit");
+        ReflectionTestUtils.setField(ttsService, "mode", "commit");
         ReflectionTestUtils.setField(ttsService, "languageType", "Chinese");
         ReflectionTestUtils.setField(ttsService, "speechRate", 1.0f);
         ReflectionTestUtils.setField(ttsService, "volume", 60);

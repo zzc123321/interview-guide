@@ -9,10 +9,12 @@ interface Result<T = unknown> {
   data: T;
 }
 
-const baseURL = import.meta.env.PROD ? '' : 'http://localhost:8080';
+export const apiBaseURL = import.meta.env.DEV
+  ? 'http://localhost:8080'
+  : (import.meta.env.VITE_API_BASE_URL ?? '');
 
 const instance: AxiosInstance = axios.create({
-  baseURL,
+  baseURL: apiBaseURL,
   timeout: 60000,
   withCredentials: true,
 });

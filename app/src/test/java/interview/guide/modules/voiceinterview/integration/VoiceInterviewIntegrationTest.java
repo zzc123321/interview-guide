@@ -6,6 +6,7 @@ import interview.guide.modules.voiceinterview.dto.SessionResponseDTO;
 import interview.guide.modules.voiceinterview.model.VoiceInterviewSessionEntity;
 import interview.guide.modules.voiceinterview.repository.VoiceInterviewSessionRepository;
 import interview.guide.modules.voiceinterview.service.VoiceInterviewService;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,10 +42,14 @@ class VoiceInterviewIntegrationTest {
     @Autowired
     private VoiceInterviewProperties properties;
 
+    @Autowired
+    private EntityManager entityManager;
+
     @BeforeEach
     void setUp() {
         // Clean up database
         sessionRepository.deleteAll();
+        entityManager.clear();
     }
 
     @Nested
@@ -56,7 +61,7 @@ class VoiceInterviewIntegrationTest {
         void testCompleteInterviewFlow() {
             // Step 1: Create session
             CreateSessionRequest createRequest = CreateSessionRequest.builder()
-                .roleType("ali-p8")
+                .skillId("ali-p8")
                 .introEnabled(true)
                 .techEnabled(true)
                 .projectEnabled(true)
@@ -93,6 +98,7 @@ class VoiceInterviewIntegrationTest {
             voiceInterviewService.endSession(sessionIdStr);
 
             // Verify session status
+            entityManager.clear();
             VoiceInterviewSessionEntity endedSession = sessionRepository.findById(sessionId).orElse(null);
             assertNotNull(endedSession);
             assertEquals(VoiceInterviewSessionEntity.InterviewPhase.COMPLETED, endedSession.getCurrentPhase());
@@ -103,7 +109,7 @@ class VoiceInterviewIntegrationTest {
         void testPhaseTransition() {
             // Create session with INTRO and TECH phases
             CreateSessionRequest request = CreateSessionRequest.builder()
-                .roleType("byteance-algo")
+                .skillId("byteance-algo")
                 .introEnabled(true)
                 .techEnabled(true)
                 .projectEnabled(false)
@@ -135,7 +141,7 @@ class VoiceInterviewIntegrationTest {
         @DisplayName("会话持久化 - 数据库存储和检索")
         void testSessionPersistence() {
             CreateSessionRequest request = CreateSessionRequest.builder()
-                .roleType("tencent-backend")
+                .skillId("tencent-backend")
                 .introEnabled(true)
                 .plannedDuration(25)
                 .build();
@@ -159,7 +165,7 @@ class VoiceInterviewIntegrationTest {
         @DisplayName("多阶段会话 - 验证所有阶段都能正确初始化")
         void testMultiPhaseSession() {
             CreateSessionRequest request = CreateSessionRequest.builder()
-                .roleType("ali-p8")
+                .skillId("ali-p8")
                 .introEnabled(true)
                 .techEnabled(true)
                 .projectEnabled(true)
@@ -217,7 +223,7 @@ class VoiceInterviewIntegrationTest {
         void testEmptyConfiguration() {
             // Create session with minimal configuration
             CreateSessionRequest request = CreateSessionRequest.builder()
-                .roleType("ali-p8")
+                .skillId("ali-p8")
                 .build();
 
             SessionResponseDTO sessionResponse = voiceInterviewService.createSession(request);
@@ -233,7 +239,7 @@ class VoiceInterviewIntegrationTest {
 
             for (String roleType : roleTypes) {
                 CreateSessionRequest request = CreateSessionRequest.builder()
-                    .roleType(roleType)
+                    .skillId(roleType)
                     .plannedDuration(30)
                     .build();
 

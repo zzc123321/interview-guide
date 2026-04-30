@@ -49,6 +49,14 @@ public class VoiceInterviewProperties {
      * 是否启用分块音频推送（每句 TTS 完成后立即推送，不等全部完成）。
      */
     private boolean chunkedAudioEnabled = false;
+    /**
+     * 是否在启动时预热开场音频缓存。测试环境可关闭以避免外部 TTS 调用噪音。
+     */
+    private boolean warmupOpeningAudioEnabled = true;
+    /**
+     * 是否启用实时语音客户端（DashScope ASR/TTS）。测试环境可关闭以避免外部 WebSocket 噪音。
+     */
+    private boolean realtimeClientsEnabled = true;
 
     @Data
     public static class PhaseConfig {

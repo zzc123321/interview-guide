@@ -2,6 +2,7 @@ package interview.guide.modules.voiceinterview.service;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import interview.guide.modules.voiceinterview.config.VoiceInterviewProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +21,10 @@ class QwenAsrServiceTest {
 
     @BeforeEach
     void setUp() {
-        asrService = new QwenAsrService();
+        VoiceInterviewProperties properties = new VoiceInterviewProperties();
+        properties.setRealtimeClientsEnabled(false);
+        properties.getQwen().getAsr().setApiKey("test-api-key");
+        asrService = new QwenAsrService(properties);
 
         // Set field values using reflection
         ReflectionTestUtils.setField(asrService, "url", "wss://dashscope.aliyuncs.com/api-ws/v1/realtime");

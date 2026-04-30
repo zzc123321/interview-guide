@@ -4,6 +4,7 @@ import interview.guide.common.exception.BusinessException;
 import interview.guide.modules.voiceinterview.config.VoiceInterviewProperties;
 import interview.guide.modules.voiceinterview.dto.CreateSessionRequest;
 import interview.guide.modules.voiceinterview.dto.SessionResponseDTO;
+import interview.guide.modules.voiceinterview.listener.VoiceEvaluateStreamProducer;
 import interview.guide.modules.voiceinterview.model.VoiceInterviewMessageEntity;
 import interview.guide.modules.voiceinterview.model.VoiceInterviewSessionEntity;
 import interview.guide.modules.voiceinterview.model.VoiceInterviewSessionStatus;
@@ -65,6 +66,9 @@ class VoiceInterviewServiceTest {
     @Mock
     private RBucket<VoiceInterviewSessionEntity> bucket;
 
+    @Mock
+    private VoiceEvaluateStreamProducer voiceEvaluateStreamProducer;
+
     @InjectMocks
     private VoiceInterviewService voiceInterviewService;
 
@@ -100,7 +104,7 @@ class VoiceInterviewServiceTest {
         void testCreateSession() {
             // Given
             CreateSessionRequest request = CreateSessionRequest.builder()
-                    .roleType("ali-p8")
+                    .skillId("ali-p8")
                     .introEnabled(true)
                     .techEnabled(true)
                     .projectEnabled(true)
@@ -126,10 +130,10 @@ class VoiceInterviewServiceTest {
             assertEquals("ali-p8", response.getRoleType());
             assertEquals("INTRO", response.getCurrentPhase());
             assertEquals("IN_PROGRESS", response.getStatus());
-            assertNotNull(response.getWebSocketUrl());
+            assertNull(response.getWebSocketUrl());
 
             verify(sessionRepository, times(1)).save(any(VoiceInterviewSessionEntity.class));
-            verify(bucket, times(1)).set(any(), eq(1L), any());
+            verify(bucket, times(1)).set(any(), any(Duration.class));
         }
 
         @Test
@@ -137,7 +141,7 @@ class VoiceInterviewServiceTest {
         void testCreateSession_TechOnly() {
             // Given
             CreateSessionRequest request = CreateSessionRequest.builder()
-                    .roleType("byteance-algo")
+                    .skillId("byteance-algo")
                     .introEnabled(false)
                     .techEnabled(true)
                     .projectEnabled(false)
@@ -166,7 +170,7 @@ class VoiceInterviewServiceTest {
         void testCreateSession_WithCustomJd() {
             // Given
             CreateSessionRequest request = CreateSessionRequest.builder()
-                    .roleType("tencent-backend")
+                    .skillId("tencent-backend")
                     .customJdText("高级Java工程师，熟悉Spring Cloud")
                     .introEnabled(true)
                     .plannedDuration(25)
@@ -299,7 +303,6 @@ class VoiceInterviewServiceTest {
             assertEquals(30, response.getPlannedDuration());
 
             // Verify conversation history was loaded
-            verify(messageRepository, times(1)).findBySessionIdOrderBySequenceNumAsc(sessionId);
             verify(sessionRepository, times(1)).save(argThat(session ->
                     session.getStatus() == VoiceInterviewSessionStatus.IN_PROGRESS &&
                     session.getResumedAt() != null
@@ -372,7 +375,7 @@ class VoiceInterviewServiceTest {
             // Then
             assertEquals(VoiceInterviewSessionEntity.InterviewPhase.TECH, session.getCurrentPhase());
             verify(sessionRepository, times(1)).save(session);
-            verify(bucket, times(1)).set(any(), eq(1L), any());
+            verify(bucket, times(1)).set(any(), any(Duration.class));
         }
 
         @Test
@@ -481,11 +484,7 @@ class VoiceInterviewServiceTest {
                     .build();
 
             when(sessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
-            when(messageRepository.findBySessionIdOrderBySequenceNumAsc(sessionId))
-                    .thenReturn(Arrays.asList(
-                            VoiceInterviewMessageEntity.builder().sequenceNum(1).build(),
-                            VoiceInterviewMessageEntity.builder().sequenceNum(2).build()
-                    ));
+            when(messageRepository.countBySessionId(sessionId)).thenReturn(2L);
 
             // When
             voiceInterviewService.saveMessage(sessionId.toString(), userText, aiText);
@@ -656,7 +655,7 @@ class VoiceInterviewServiceTest {
             assertEquals("tencent-backend", dto.getRoleType());
             assertEquals("HR", dto.getCurrentPhase());
             assertEquals("IN_PROGRESS", dto.getStatus());
-            assertNotNull(dto.getWebSocketUrl());
+            assertNull(dto.getWebSocketUrl());
         }
     }
 

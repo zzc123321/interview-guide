@@ -9,7 +9,7 @@ services:
     container_name: interview-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123456}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-interview_guide}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -35,29 +35,25 @@ services:
       timeout: 3s
       retries: 5
 
-  rustfs:
-    image: rustfs/rustfs:latest
-    container_name: interview-rustfs
-    command: ["/data"]
+  minio:
+    image: minio/minio
+    container_name: interview-minio
+    command: server /data --console-address ":9001"
     environment:
-      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-rustfsadmin}
-      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-rustfsadmin}
-      RUSTFS_CONSOLE_ENABLE: "true"
+      MINIO_ROOT_USER: ${APP_STORAGE_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${APP_STORAGE_SECRET_KEY:-minioadmin}
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - rustfs_data:/data
+      - minio_data:/data
     healthcheck:
-      test: ["CMD-SHELL", "timeout 3 sh -c 'cat < /dev/null > /dev/tcp/localhost/9000' || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 5s
       timeout: 3s
       retries: 5
 
-# 首次启动后，浏览器访问 http://localhost:9001
-# 使用 ${RUSTFS_ACCESS_KEY} / ${RUSTFS_SECRET_KEY} 登录，手动创建名为 interview-guide 的 bucket
-
 volumes:
   postgres_data:
   redis_data:
-  rustfs_data:
+  minio_data:

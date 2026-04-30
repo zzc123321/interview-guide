@@ -22,6 +22,8 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -118,7 +120,11 @@ public class VoiceInterviewService {
     @Transactional
     public void endSession(String sessionId) {
         Long sessionIdLong = parseSessionId(sessionId);
-        VoiceInterviewSessionEntity session = getSession(sessionIdLong);
+        if (sessionIdLong == null) {
+            log.warn("Session not found: {}", sessionId);
+            return;
+        }
+        VoiceInterviewSessionEntity session = sessionRepository.findById(sessionIdLong).orElse(null);
 
         if (session == null) {
             log.warn("Session not found: {}", sessionId);
@@ -126,7 +132,7 @@ public class VoiceInterviewService {
         }
 
         endSession(session);
-        voiceEvaluateStreamProducer.sendEvaluateTask(sessionId);
+        sendEvaluateTaskAfterCommit(sessionId);
     }
 
     private void endSession(VoiceInterviewSessionEntity session) {
@@ -507,7 +513,7 @@ public class VoiceInterviewService {
                 .status(session.getStatus().name())
                 .startTime(session.getStartTime())
                 .plannedDuration(session.getPlannedDuration())
-                .webSocketUrl(String.format("ws://localhost:8080/ws/voice-interview/%d", session.getId()))
+                .webSocketUrl(null)
                 .build();
     }
 
@@ -554,7 +560,21 @@ public class VoiceInterviewService {
     @Transactional
     public void triggerEvaluation(Long sessionId) {
         updateEvaluateStatus(sessionId, AsyncTaskStatus.PENDING, null);
-        voiceEvaluateStreamProducer.sendEvaluateTask(sessionId.toString());
+        sendEvaluateTaskAfterCommit(sessionId.toString());
+    }
+
+    private void sendEvaluateTaskAfterCommit(String sessionId) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            voiceEvaluateStreamProducer.sendEvaluateTask(sessionId);
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                voiceEvaluateStreamProducer.sendEvaluateTask(sessionId);
+            }
+        });
     }
 
     /**

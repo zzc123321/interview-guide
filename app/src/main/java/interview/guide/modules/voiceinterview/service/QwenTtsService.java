@@ -43,6 +43,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @Service
 public class QwenTtsService {
 
+    private final boolean realtimeClientsEnabled;
+
     // Runtime configuration values (loaded from VoiceInterviewProperties; setters kept for tests)
     private String model;
 
@@ -64,6 +66,7 @@ public class QwenTtsService {
 
     public QwenTtsService(VoiceInterviewProperties voiceInterviewProperties) {
         VoiceInterviewProperties.QwenTtsConfig tts = voiceInterviewProperties.getQwen().getTts();
+        this.realtimeClientsEnabled = voiceInterviewProperties.isRealtimeClientsEnabled();
         this.model = tts.getModel();
         this.apiKey = tts.getApiKey();
         this.voice = tts.getVoice();
@@ -84,6 +87,10 @@ public class QwenTtsService {
      */
     @PostConstruct
     public void init() {
+        if (!realtimeClientsEnabled) {
+            log.info("QwenTtsService realtime client disabled by configuration");
+            return;
+        }
         if (apiKey == null || apiKey.trim().isEmpty()) {
             throw new IllegalStateException("API key must be configured before initializing QwenTtsService");
         }
@@ -108,6 +115,11 @@ public class QwenTtsService {
         // Handle null, empty, or whitespace-only text
         if (text == null || text.trim().isEmpty()) {
             log.debug("Empty or null text provided, returning empty audio array");
+            return new byte[0];
+        }
+
+        if (!realtimeClientsEnabled) {
+            log.debug("Skipping TTS synthesis because realtime client is disabled");
             return new byte[0];
         }
 
