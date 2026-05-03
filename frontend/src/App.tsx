@@ -25,6 +25,7 @@ const InterviewSchedulePage = lazy(() => import('./pages/InterviewSchedulePage')
 const InterviewHubPage = lazy(() => import('./pages/InterviewHubPage'));
 const InterviewDetailPanel = lazy(() => import('./components/InterviewDetailPanel'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
 
 // Loading component
 const Loading = () => (
@@ -170,6 +171,8 @@ function App() {
     <BrowserRouter>
       <Suspense fallback={<Loading />}>
         <Routes>
+          <Route path="/pricing" element={<PricingPage />} />
+
           <Route element={<PublicOnlyRoute />}>
             <Route path="/login" element={<LoginPage />} />
           </Route>

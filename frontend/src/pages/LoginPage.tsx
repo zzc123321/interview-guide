@@ -82,6 +82,13 @@ export default function LoginPage() {
             <div className="text-center mb-10">
               <h1 className="text-3xl md:text-4xl font-display font-semibold mb-3">Welcome Back</h1>
               <p className="text-slate-400">Precision recruitment, powered by Interview AI.</p>
+              <div className="mt-5 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-300">
+                <span>免费体验 3 次文本面试</span>
+                <span className="h-1 w-1 rounded-full bg-slate-500" />
+                <Link to="/pricing" className="font-medium text-violet-200 hover:text-white transition-colors">
+                  查看收费方案
+                </Link>
+              </div>
             </div>
 
             <form className="space-y-5" onSubmit={handleSubmit}>
@@ -173,6 +180,11 @@ export default function LoginPage() {
             <div className="mt-10 text-center text-sm text-slate-400">
               Don&apos;t have an account yet?
               <span className="ml-1 text-violet-200 font-medium">Self-signup will be added later.</span>
+              <div className="mt-3">
+                <Link to="/pricing" className="text-sm text-violet-200 hover:text-white transition-colors">
+                  Explore pricing and launch packages
+                </Link>
+              </div>
             </div>
           </div>
         </div>
